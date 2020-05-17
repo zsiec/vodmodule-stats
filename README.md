@@ -146,3 +146,6 @@ By default, this code scrapes all discovered pods every minute. Example log line
   "message": "successful scrape"
 }
 ```
+
+- Logging is provided by [rs/zerolog](https://github.com/rs/zerolog)
+- Configuration by [kelseyhightower/envconfig](https://github.com/kelseyhightower/envconfig)
