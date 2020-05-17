@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: vodmodule-stats
+    namespace: stats
+  name: vodmodule-stats
+  namespace: stats
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vodmodule-stats
+  template:
+    metadata:
+      labels:
+        app: vodmodule-stats
+        namespace: stats
+    spec:
+      serviceAccountName: vodmodule-stats
+      containers:
+        - env:
+          image: zsiec/vodmodule-stats:latest
+          imagePullPolicy: Always
+          name: vodmodule-stats
