@@ -28,7 +28,7 @@ func main() {
 	logger = logger.With().
 		Str("namespace", cfg.Namespace).
 		Str("status_path", cfg.StatusPath).
-		Str("scrapeInterval", cfg.ScrapeInterval.String()).
+		Str("scrape_interval", cfg.ScrapeInterval.String()).
 		Logger()
 
 	scraper := vodmodule_stats.PodScraper{

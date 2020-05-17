@@ -21,7 +21,7 @@ By default, this code scrapes all discovered pods every minute. Example log line
   "svc": "vodmodule-stats",
   "namespace": "some-ns",
   "status_path": "/status",
-  "scrapeInterval": "1m0s",
+  "scrape_interval": "1m0s",
   "status_url": "http://10.0.122.100/status",
   "name": "otfp-dev-6692853f85-vrz5z",
   "c_metadata_store_ok": 118,
