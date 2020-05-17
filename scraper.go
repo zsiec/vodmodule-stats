@@ -1,6 +1,7 @@
 package vodmodule_stats
 
 import (
+	"encoding/xml"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -55,7 +56,68 @@ func (s PodScraper) Scrape() error {
 				return
 			}
 
-			logger.Info().Msgf("status: %s", string(body))
+			var s status
+
+			err = xml.Unmarshal(body, &s)
+			if err != nil {
+				logger.Err(fmt.Errorf("unmarshaling xml response: %w", err)).Msg("parse failed")
+				return
+			}
+
+			cacheStatses := map[string]CacheStats{
+				"c_metadata": s.MetadataCache,
+				"c_response": s.ResponseCache,
+				"c_mapping":  s.MappingCache,
+				"c_drm_info": s.DrmInfoCache,
+			}
+
+			for k, cs := range cacheStatses {
+				logger = logger.With().
+					Int(fmt.Sprintf("%s_store_ok", k), mustInt(cs.StoreOk)).
+					Int(fmt.Sprintf("%s_store_bytes", k), mustInt(cs.StoreBytes)).
+					Int(fmt.Sprintf("%s_store_err", k), mustInt(cs.StoreErr)).
+					Int(fmt.Sprintf("%s_store_exists", k), mustInt(cs.StoreExists)).
+					Int(fmt.Sprintf("%s_fetch_hit", k), mustInt(cs.FetchHit)).
+					Int(fmt.Sprintf("%s_fetch_bytes", k), mustInt(cs.FetchBytes)).
+					Int(fmt.Sprintf("%s_fetch_miss", k), mustInt(cs.FetchMiss)).
+					Int(fmt.Sprintf("%s_evicted", k), mustInt(cs.Evicted)).
+					Int(fmt.Sprintf("%s_evicted_bytes", k), mustInt(cs.EvictedBytes)).
+					Int(fmt.Sprintf("%s_reset", k), mustInt(cs.Reset)).
+					Int(fmt.Sprintf("%s_entries", k), mustInt(cs.Entries)).
+					Int(fmt.Sprintf("%s_data_size", k), mustInt(cs.DataSize)).
+					Logger()
+			}
+
+			counters := s.PerformanceCounters
+
+			performanceCounters := map[string]PerfCounters{
+				"pc_fetch_cache":     counters.FetchCache,
+				"pc_store_cache":     counters.StoreCache,
+				"pc_map_path":        counters.MapPath,
+				"pc_parse_media_set": counters.ParseMediaSet,
+				"pc_get_drm_info":    counters.GetDrmInfo,
+				"pc_open_file":       counters.OpenFile,
+				"pc_async_open_file": counters.AsyncOpenFile,
+				"pc_read_file":       counters.ReadFile,
+				"pc_async_read_file": counters.AsyncReadFile,
+				"pc_media_parse":     counters.MediaParse,
+				"pc_build_manifest":  counters.BuildManifest,
+				"pc_init_frame_prod": counters.InitFrameProcessing,
+				"pc_proc_frames":     counters.ProcessFrames,
+				"pc_total":           counters.Total,
+			}
+
+			for k, pc := range performanceCounters {
+				logger = logger.With().
+					Int(fmt.Sprintf("%s_sum", k), mustInt(pc.Sum)).
+					Int(fmt.Sprintf("%s_count", k), mustInt(pc.Count)).
+					Int(fmt.Sprintf("%s_max", k), mustInt(pc.Max)).
+					Int(fmt.Sprintf("%s_max_time", k), mustInt(pc.MaxTime)).
+					Int(fmt.Sprintf("%s_max_pid", k), mustInt(pc.MaxPid)).
+					Logger()
+			}
+
+			logger.Info().Msg("successful scrape")
 		}()
 	}
 
