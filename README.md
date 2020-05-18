@@ -10,7 +10,7 @@ pods by namespace and addresses them by their internal cluster IP.
 
 Run locally with:
 ```
-make run
+go run ./cmd/scrape/main.go
 ```
 
 By default, this code scrapes all discovered pods every minute. Example log line:
