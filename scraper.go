@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/rs/zerolog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -16,6 +17,7 @@ import (
 type PodScraper struct {
 	Namespace, StatusPath string
 	Logger                zerolog.Logger
+	Client                *http.Client
 
 	podClient v1.PodInterface
 }
@@ -43,7 +45,7 @@ func (s PodScraper) Scrape() error {
 				Str("name", pod.name).
 				Logger()
 
-			resp, err := http.Get(pod.statusEndpoint)
+			resp, err := s.Client.Get(pod.statusEndpoint)
 			if err != nil {
 				logger.Err(fmt.Errorf("requesting status: %w", err)).Msg("req failed")
 				return
@@ -102,7 +104,7 @@ func (s PodScraper) Scrape() error {
 				"pc_async_read_file": counters.AsyncReadFile,
 				"pc_media_parse":     counters.MediaParse,
 				"pc_build_manifest":  counters.BuildManifest,
-				"pc_init_frame_prod": counters.InitFrameProcessing,
+				"pc_init_frame_proc": counters.InitFrameProcessing,
 				"pc_proc_frames":     counters.ProcessFrames,
 				"pc_total":           counters.Total,
 			}
@@ -155,6 +157,10 @@ func (s *PodScraper) ensure() (err error) {
 		if err != nil {
 			return fmt.Errorf("creating pods client with namespace %q: %w", s.Namespace, err)
 		}
+	}
+
+	if s.Client == nil {
+		s.Client = &http.Client{Timeout: 10 * time.Second}
 	}
 
 	return nil
